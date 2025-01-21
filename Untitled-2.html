@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transporte Urbano</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #6f1dc4, #9c47f7);
+            color: white;
+            overflow-x: hidden;
+            height: 100%;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            background-image: url('https://via.placeholder.com/1024x300');
+            background-size: cover;
+            background-position: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            overflow: hidden;
+        }
+        .support {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .support::before {
+            content: '\1F6E0';
+            font-size: 18px;
+            margin-right: 5px;
+        }
+        .profile {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: transparent;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: hsl(0, 0%, 100%);
+        }
+        .profile img {
+            width: 50%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-button {
+            content:'\270E';
+            position: absolute;
+            bottom: 60%;
+            right: 45%;
+            background: #4c00b0;
+            color: white;
+            border-radius: 50%;
+            padding: 5px;
+            font-size: 14px;
+            border: 2px solid white;
+        }
+        .profile::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: none;
+        }
+        .header h1 {
+            margin-top: 10px;
+            font-size: 24px;
+        }
+        .balance {
+            font-size: 40px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .urbicoins {
+            font-size: 18px;
+        }
+        .location {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+        }
+        .transport-section {
+            text-align: center;
+            margin: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            color: black;
+            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        .navigation div {
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .navigation .active {
+            color: purple;
+            font-weight: bold;
+        }
+
+        /* Contenedor para los cuadros con scroll horizontal */
+        .cuadro-container-wrapper {
+            width: 30%;
+            margin-top: 40px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .cuadro-container {
+            display: flex;
+            cursor: grab;
+            transition: transform 0.3s ease;
+        }
+
+        .cuadro {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            margin: 0 10px;
+            border-radius: 10px;
+            opacity: 1;
+            cursor: pointer;
+        }
+        .cuadro img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        #map {
+            height: 550px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Estilo para las flechas */
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .arrow-left {
+            left: 30%;
+        }
+
+        .arrow-right {
+            right: 30%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="support">Soporte</div>
+        <div class="profile">
+            <!-- Imagen de perfil -->
+            <img id="profile-img" src="https://via.placeholder.com/100" alt="Usuario">
+            <!-- Input para subir la imagen -->
+            <input type="file" id="file-input" accept="image/*" onchange="previewImage(event)" style="display: none;">
+        </div>
+        <div class="profile-button">
+            <!-- Botón para activar el input de archivo -->
+            <button onclick="document.getElementById('file-input').click()"></button>
+        </div>
+        <h1>¡Hola!</h1>
+        <div class="balance">$0.00</div>
+        <div class="urbicoins">0 Veracoins</div>
+        <div id="user-location" class="location">Ubicación...</div>
+    </div>
+
+    <!-- Sección Inicio (Visible por defecto) -->
+    <div id="inicio" class="transport-section">
+        <h2>Inicio</h2>
+        <p>Bienvenido al sistema de transporte urbano. Selecciona una Ruta.</p>
+
+        <!-- Sección de los cuadros -->
+        <h2>Desliza los cuadros</h2>
+        <div class="cuadro-container-wrapper" id="cuadro-container-wrapper">
+            <div class="cuadro-container" id="cuadro-container">
+                <div class="cuadro" id="cuadro1">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 1</p>
+                </div>
+                <div class="cuadro" id="cuadro2">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 2</p>
+                </div>
+                <div class="cuadro" id="cuadro3">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 3</p>
+                </div>
+                <div class="cuadro" id="cuadro4">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 4</p>
+                </div>
+                <div class="cuadro" id="cuadro5">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 5</p>
+                </div>
+                <div class="cuadro" id="cuadro6">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 6</p>
+                </div>
+                <div class="cuadro" id="cuadro7">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 7</p>
+                </div>
+                <div class="cuadro" id="cuadro8">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 8</p>
+                </div>
+                <div class="cuadro" id="cuadro9">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 9</p>
+                </div>
+                <div class="cuadro" id="cuadro10">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 10</p>
+                </div>
+                <div class="cuadro" id="cuadro11">
+                    <img src="autobus.gif" alt="Icono" />
+                    <p>Contenido 11</p>
+                </div>
+            </div>
+        </div>
+        <!-- Flechas para mover el carrete -->
+        <div class="arrow arrow-left" id="arrow-left">&#8592;</div>
+        <div class="arrow arrow-right" id="arrow-right">&#8594;</div>
+    </div>
+
+    <!-- Sección Mapa -->
+    <div id="mapa" class="transport-section hidden">
+        <h2>Mapa</h2>
+        <div id="map"></div>
+    </div>
+
+    <!-- Sección Perfil -->
+    <div id="perfil" class="transport-section hidden">
+        <h2>Perfil</h2>
+        <p>Gestiona tu información personal y preferencias de usuario.</p>
+    </div>
+
+    <div class="navigation">
+        <div onclick="showSection('cartera')">Cartera</div>
+        <div onclick="showSection('historial')">Historial</div>
+        <div class="active" onclick="showSection('inicio')">Inicio</div>
+        <div onclick="showSection('mapa')">Mapa</div>
+        <div onclick="showSection('perfil')">Perfil</div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.transport-section');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            const navItems = document.querySelectorAll('.navigation div');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector('.navigation div[onclick="showSection(\'' + sectionId + '\')"]').classList.add('active');
+        }
+
+        // Inicialización del mapa
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 19.1738, lng: -96.1349 },
+                zoom: 12,
+            });
+            const marker = new google.maps.Marker({
+                position: { lat: 19.1738, lng: -96.1349 },
+                map: map,
+                title: "Ubicación del Usuario",
+            });
+        }
+
+        window.initMap = initMap;
+
+        // Mover el carrete con las flechas
+        const arrowLeft = document.getElementById("arrow-left");
+        const arrowRight = document.getElementById("arrow-right");
+        const container = document.getElementById("cuadro-container");
+
+        let scrollAmount = 0;
+        const scrollStep = 100; // Paso del scroll en píxeles
+
+        arrowLeft.addEventListener("click", () => {
+            scrollAmount -= scrollStep;
+            container.style.transform = `translateX(${scrollAmount}px)`;
+        });
+
+        arrowRight.addEventListener("click", () => {
+            scrollAmount += scrollStep;
+            container.style.transform = `translateX(${scrollAmount}px)`;
+        });
+
+        // Mostrar la primera sección
+        showSection('inicio');
+
+        // Función para previsualizar la imagen
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
+                document.getElementById("profile-img").src = imageUrl;
+            };
+
+            reader.readAsDataURL(file);
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfmQxU4dmUERynZUEHt3X7yrZZro8r9bo&callback=initMap&v=weekly" async></script>
+</body>
+</html>
